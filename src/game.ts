@@ -1,28 +1,32 @@
 //Player's position and rotation 
 const player = Camera.instance
 
-//What distance from the player should the kittys stop
-const followDistance = 4
+//tells whether axies follow player or the marker target
+let followPlayer = true
+let targetLocation = new Vector3(8,0,8)
 
-//kittys' maximum size in meters!! (for checking out of bounds around estate)
-const kittySize = 1.5
+//What distance from the player should the axies stop
+const followDistance = 0
+
+//axies' maximum size in meters!! (for checking out of bounds around estate)
+const axieSize = 1.5
 
 //size of scene/estate (number of parcels on each axis)
 const parcelsCountX = 3
 const parcelsCountZ = 3
 
-//boundaries in which kittys can move, in meters (respecting kitty's maximum size as well)
-const boundarySizeXMin = 0 + kittySize
-const boundarySizeXMax = parcelsCountX * 16 - kittySize
-const boundarySizeZMin = 0 + kittySize
-const boundarySizeZMax = parcelsCountZ * 16 - kittySize
+//boundaries in which axies can move, in meters (respecting axie's maximum size as well)
+const boundarySizeXMin = 0 + axieSize
+const boundarySizeXMax = parcelsCountX * 16 - axieSize
+const boundarySizeZMin = 0 + axieSize
+const boundarySizeZMax = parcelsCountZ * 16 - axieSize
 
 
 //default values for every follower object
 @Component("FollowsPlayer")
 export class FollowsPlayer {  
   defaultHeight:number = 0
-  speed:number = 2
+  speed:number = 0.2
   randomOffsetX:number =  (Math.random()*2-1) * followDistance 
   randomOffsetZ:number =  (Math.random()*2-1) * followDistance 
   moving:boolean = true
@@ -37,23 +41,23 @@ function distance(pos1: Vector3, pos2: Vector3): number {
 }
 
 /////////////////////////////////////////////////////////
-// This function below creates an kitty with parameters: 
-// modelShape: (required parameter) this should be the .glb or .gltf file of the kitty
-// _floatHeight: (optional, default is 2 meters) this will be the height measured from the ground where the kitty will move around 
-// _speed: (optional, default is 2 meters/second) the speed if the kitty 
-// _flipForward: (optional) make the kitty mesh face the other direction  
+// This function below creates an axie with parameters: 
+// modelShape: (required parameter) this should be the .glb or .gltf file of the axie
+// _floatHeight: (optional, default is 2 meters) this will be the height measured from the ground where the axie will move around 
+// _speed: (optional, default is 2 meters/second) the speed if the axie 
+// _flipForward: (optional) make the axie mesh face the other direction  
 /////////////////////////////////////////////////////////
-function createKitty(modelShape:GLTFShape, _startPosition?:Vector3, _defaultHeight?:number, _speed?:number, _flipForward?:boolean ){
+function spawnAxie(modelShape:GLTFShape, _startPosition?:Vector3, _defaultHeight?:number, _speed?:number, _flipForward?:boolean ){
     
-  let kittyMeshRotate = new Entity()
-  kittyMeshRotate.addComponent(modelShape)  
-  kittyMeshRotate.addComponent(new Transform({position: new Vector3(0, 0, 0)}))
+  let axieMeshRotate = new Entity()
+  axieMeshRotate.addComponent(modelShape)  
+  axieMeshRotate.addComponent(new Transform({position: new Vector3(0, 0, 0)}))
 
-  let kitty = new Entity()
-  kitty.addComponent(new Transform({position: new Vector3(8, 2, 8), scale: new Vector3(0.4,0.4,0.4)}))
-  kitty.addComponent(new FollowsPlayer())
+  let axie = new Entity()
+  axie.addComponent(new Transform({position: new Vector3(8, 2, 8), scale: new Vector3(0.4,0.4,0.4)}))
+  axie.addComponent(new FollowsPlayer())
 
-  kittyMeshRotate.setParent(kitty)
+  axieMeshRotate.setParent(axie)
 
   if(_startPosition){
 
@@ -70,59 +74,66 @@ function createKitty(modelShape:GLTFShape, _startPosition?:Vector3, _defaultHeig
       if(_startPosition.z < boundarySizeZMin){
       _startPosition.z = boundarySizeZMin
     }
-    kitty.getComponent(Transform).position = _startPosition
+    axie.getComponent(Transform).position = _startPosition
   }
 
   if(_defaultHeight){
-    kitty.getComponent(FollowsPlayer).defaultHeight = _defaultHeight
+    axie.getComponent(FollowsPlayer).defaultHeight = _defaultHeight
   }
 
   if(_speed){
-    kitty.getComponent(FollowsPlayer).speed = _speed
+    axie.getComponent(FollowsPlayer).speed = _speed
   }
 
   if(_flipForward){    
-    kittyMeshRotate.getComponent(Transform).rotation = Quaternion.Euler(0,180,0)
+    axieMeshRotate.getComponent(Transform).rotation = Quaternion.Euler(0,180,0)
   }
 
-  kitty.getComponent(FollowsPlayer).elapsedTime = Math.random()*0.5
-  kitty.getComponent(FollowsPlayer).followDistance = Math.random()*6 + 3
-  kitty.getComponent(FollowsPlayer).randomOffsetX =  (Math.random()*2-1) * kitty.getComponent(FollowsPlayer).followDistance
-  kitty.getComponent(FollowsPlayer).randomOffsetZ =  (Math.random()*2-1) * kitty.getComponent(FollowsPlayer).followDistance
+  axie.getComponent(FollowsPlayer).elapsedTime = Math.random() * 0.5
+  axie.getComponent(FollowsPlayer).followDistance = Math.random() * 6 + followDistance
+  axie.getComponent(FollowsPlayer).randomOffsetX =  (Math.random()*2-1) * axie.getComponent(FollowsPlayer).followDistance
+  axie.getComponent(FollowsPlayer).randomOffsetZ = (Math.random()*2-1) * axie.getComponent(FollowsPlayer).followDistance
 
-  kitty.addComponent(new Billboard())
+  //axie.addComponent(new Billboard())
 
 
-  engine.addEntity(kitty)  
+  engine.addEntity(axie)  
 }
 
 //this system updates and moves the objects on every frame (the ones which have the FollowsPlayer componenet added)
 class PlayerFollowSystem {
  
   group = engine.getComponentGroup(FollowsPlayer)
+  moveVector = new Vector3(0,0,0)
 
   update(dt: number) {
+
      for (let entity of this.group.entities) {
 
       const objectInfo = entity.getComponent(FollowsPlayer)      
       let transform = entity.getComponentOrCreate(Transform)      
 
-      let origin = new Vector3(transform.position.x, transform.position.y, transform.position.z)
-      let targetPosition = new Vector3(player.feetPosition.x + objectInfo.randomOffsetX, objectInfo.defaultHeight, player.feetPosition.z + objectInfo.randomOffsetZ )
+      if(followPlayer){
+        targetLocation.copyFrom(player.feetPosition) 
+      }
 
-      let lookatPosition = new Vector3(player.feetPosition.x , objectInfo.defaultHeight, player.feetPosition.z )
+      let origin = new Vector3(transform.position.x, transform.position.y, transform.position.z)
+      let targetPosition = new Vector3(targetLocation.x + objectInfo.randomOffsetX, objectInfo.defaultHeight, targetLocation.z + objectInfo.randomOffsetZ )
+
+      let lookatPosition = new Vector3(targetLocation.x , objectInfo.defaultHeight, targetLocation.z )
      
-      let fraction = objectInfo.speed * dt
+      let fraction = dt
+
       if(fraction > 1){
         fraction = 1
       }
 
-      //don't let kitty closer than followDistance
-      if(distance(player.feetPosition, transform.position) > Math.pow(objectInfo.followDistance,2) ){
+      //don't let axie closer than its stored followDistance
+      if(distance(targetPosition, transform.position) > 0.25 ){
 
         objectInfo.moving = true
         let nextPosition = Vector3.Lerp(origin, targetPosition, fraction)
-
+        
         //Out of bounds movement?
         if( nextPosition.x > boundarySizeXMax || nextPosition.x < boundarySizeXMin){
             nextPosition.x = origin.x
@@ -131,24 +142,26 @@ class PlayerFollowSystem {
           nextPosition.z = origin.z
         }
 
-        transform.position = nextPosition
+        this.moveVector =  nextPosition.subtract(origin).normalize().multiplyByFloats(objectInfo.speed,objectInfo.speed,objectInfo.speed)         
+
+        transform.position.addInPlace(this.moveVector)
       }
       else{
         objectInfo.moving = false
       }
 
       //gradually rotate towards the target point (player position)
-      //let targetRotation = Quaternion.FromToRotation(Vector3.Forward(), lookatPosition.subtract(origin.multiplyByFloats(1,0,1)))        
-      // transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, dt*4)  
+      let targetRotation = Quaternion.FromToRotation(Vector3.Forward(), lookatPosition.subtract(origin.multiplyByFloats(1,0,1)))        
+       transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, dt*4)  
     } 
   }
 }
 engine.addSystem(new PlayerFollowSystem())
 
 
-//idle floating movement of kittys 
+//idle floating movement of axies 
 //remove completely if not needed
-class floatIdleSystem {
+class bounceSystem {
 
   //jump height
   amplitude = 0.4
@@ -174,28 +187,11 @@ class floatIdleSystem {
   }
 }
 
-engine.addSystem(new floatIdleSystem())
+engine.addSystem(new bounceSystem())
 
-
-//Ground
-let groundShape = new GLTFShape('models/ground.glb')
-
-for(let i = 0; i < parcelsCountX; i++){
-  for(let j = 0; j < parcelsCountZ; j++){
-    let ground = new Entity()
-    ground.addComponent(groundShape)
-    ground.addComponent(new Transform({position:new Vector3(i*16+8, 0, j*16+8)}))
-    engine.addEntity(ground)
-  }
-}
-
-
-
-/////////////////////
-// CREATE AXIES BELOW
-/////////////////////
-
-let kittyShape =  new GLTFShape('models/kitty.glb')
+///////////////
+// CREATE AXIES 
+///////////////
 
 //Load a GLB file from project folder 'models'
 let axieShape1 =  new GLTFShape('models/Axie_1.glb')
@@ -209,30 +205,82 @@ let axieShape8 =  new GLTFShape('models/Axie_8.glb')
 let axieShape9 =  new GLTFShape('models/Axie_9.glb')
 let axieShape10 =  new GLTFShape('models/Axie_10.glb')
 
-let shapes = []
+let axieShapeArray = []
 
-shapes.push(axieShape1)
-shapes.push(axieShape2)
-shapes.push(axieShape3)
-shapes.push(axieShape4)
-shapes.push(axieShape5)
-shapes.push(axieShape6)
-shapes.push(axieShape7)
-shapes.push(axieShape8)
-shapes.push(axieShape9)
-shapes.push(axieShape10)
+axieShapeArray.push(axieShape1)
+axieShapeArray.push(axieShape2)
+axieShapeArray.push(axieShape3)
+axieShapeArray.push(axieShape4)
+axieShapeArray.push(axieShape5)
+axieShapeArray.push(axieShape6)
+axieShapeArray.push(axieShape7)
+axieShapeArray.push(axieShape8)
+axieShapeArray.push(axieShape9)
+axieShapeArray.push(axieShape10)
 
-
-
-
-
-//...
-
-//Set up kitty: (glb/gltf shape's name, start position vector, height above ground, movement speed, flip forward direction of object)
-//createkitty(kittyShape1, new Vector3(4,2,8), 0, 0.8 , false)
-//createkitty(kittyShape2, new Vector3(10,2,8), 0, 0.8 , false)
+//Spawn axies: (glb/gltf shape's name, start position vector, height above ground, movement speed, flip forward direction of object)
 
 for(let i=0; i<50; i++){
-  createKitty(shapes[i%10], new Vector3(Math.random()*parcelsCountX*16,2,Math.random()*parcelsCountX*16), 0, Math.random() + 0.5 , false)
+  spawnAxie(axieShapeArray[i%10], new Vector3(Math.random()*parcelsCountX*16,2,Math.random()*parcelsCountX*16), 0, Math.random()*0.15 + 0.1 , false)
 }
-//...
+
+//Create target marker
+let markerShape =  new GLTFShape('models/marker.glb')
+
+let marker = new Entity()
+marker.addComponent(markerShape)
+marker.addComponent(new Transform({position: new Vector3(8,-20, 8)}))
+marker.addComponent(new Billboard(false,true,false))
+engine.addEntity(marker)
+
+
+//Ground
+let groundShape = new GLTFShape('models/ground.glb')
+
+for(let i = 0; i < parcelsCountX; i++){
+  for(let j = 0; j < parcelsCountZ; j++){
+    let ground = new Entity()
+    ground.addComponent(groundShape)
+    ground.addComponent(new Transform({position:new Vector3(i*16+8, 0.1, j*16+8)}))
+    engine.addEntity(ground)
+  }
+}
+
+let ground = new Entity()
+ground.addComponent(new BoxShape())
+ground.addComponent(new Transform({position:new Vector3(parcelsCountX*16/2,0,parcelsCountZ*16/2),
+scale: new Vector3(parcelsCountX*16-4,0.1,parcelsCountZ*16-4)}))
+engine.addEntity(ground)
+
+
+
+function makeFollowPlayer(){
+
+  followPlayer = true
+  marker.getComponent(Transform).position.set(8,-20,8)
+}
+
+function makeFollowLocation(_loc:Vector3){
+  followPlayer = false
+  targetLocation = _loc
+  marker.getComponent(Transform).position.copyFrom(_loc)
+
+}
+
+const input = Input.instance
+
+//click to send axies to a location
+input.subscribe("BUTTON_DOWN", ActionButton.POINTER, true, e => {
+ 
+  if(e.hit){
+    if(e.hit.hitPoint.x != 0 || e.hit.hitPoint.z != 0){
+      makeFollowLocation(e.hit.hitPoint) 
+    }
+  }
+})
+
+//make axies follow player with E button
+input.subscribe("BUTTON_DOWN", ActionButton.PRIMARY, false, e => {     
+  makeFollowPlayer()  
+})
+
