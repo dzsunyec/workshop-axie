@@ -1,0 +1,16 @@
+bin/game.js
+node_modules/.bin/build-ecs
+node_modules/.bin/tsc
+node_modules/.bin/tsserver
+node_modules/.bin/uglifyjs
+node_modules/commander/
+node_modules/decentraland-ecs/
+node_modules/source-map/
+node_modules/typescript/
+node_modules/uglify-js/
+package-lock.json
+scene/bin/
+scene/node_modules/
+server/node_modules/
+scene/export/
+node_modules/
