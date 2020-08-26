@@ -21,7 +21,6 @@ const boundarySizeXMax = parcelsCountX * 16 - axieSize
 const boundarySizeZMin = 0 + axieSize
 const boundarySizeZMax = parcelsCountZ * 16 - axieSize
 
-
 // COMPONENT storing values unique to each axie
 // defaultHeight: height above ground level where axies move around
 // speed
