@@ -12,7 +12,7 @@ const scatterRadius = 6
 const axieSize = 1.5
 
 //size of scene/estate (number of parcels on each axis)
-const parcelsCountX = 3
+const parcelsCountX = 2
 const parcelsCountZ = 3
 
 //boundaries in which axies can move, in meters (respecting axie's maximum size as well)
@@ -184,30 +184,31 @@ engine.addSystem(new bounceSystem())
 ///////////////
 
 //Load a GLB file from project folder 'models'
-let axieShape1 =  new GLTFShape('models/Axie_1.glb')
-let axieShape2 =  new GLTFShape('models/Axie_2.glb')
-let axieShape3 =  new GLTFShape('models/Axie_3.glb')
-let axieShape4 =  new GLTFShape('models/Axie_4.glb')
-let axieShape5 =  new GLTFShape('models/Axie_5.glb')
-let axieShape6 =  new GLTFShape('models/Axie_6.glb')
-let axieShape7 =  new GLTFShape('models/Axie_7.glb')
-let axieShape8 =  new GLTFShape('models/Axie_8.glb')
-let axieShape9 =  new GLTFShape('models/Axie_9.glb')
-let axieShape10 =  new GLTFShape('models/Axie_10.glb')
+// let axieShape1 =  new GLTFShape('models/Axie_1.glb')
+// let axieShape2 =  new GLTFShape('models/Axie_2.glb')
+// let axieShape3 =  new GLTFShape('models/Axie_3.glb')
+// let axieShape4 =  new GLTFShape('models/Axie_4.glb')
+// let axieShape5 =  new GLTFShape('models/Axie_5.glb')
+// let axieShape6 =  new GLTFShape('models/Axie_6.glb')
+// let axieShape7 =  new GLTFShape('models/Axie_7.glb')
+// let axieShape8 =  new GLTFShape('models/Axie_8.glb')
+// let axieShape9 =  new GLTFShape('models/Axie_9.glb')
+// let axieShape10 =  new GLTFShape('models/Axie_10.glb')
 
+let kittyShape =  new GLTFShape('models/kitty.glb')
 
-let axieShapeArray = []
+// let axieShapeArray = []
 
-axieShapeArray.push(axieShape1)
-axieShapeArray.push(axieShape2)
-axieShapeArray.push(axieShape3)
-axieShapeArray.push(axieShape4)
-axieShapeArray.push(axieShape5)
-axieShapeArray.push(axieShape6)
-axieShapeArray.push(axieShape7)
-axieShapeArray.push(axieShape8)
-axieShapeArray.push(axieShape9)
-axieShapeArray.push(axieShape10)
+// axieShapeArray.push(axieShape1)
+// axieShapeArray.push(axieShape2)
+// axieShapeArray.push(axieShape3)
+// axieShapeArray.push(axieShape4)
+// axieShapeArray.push(axieShape5)
+// axieShapeArray.push(axieShape6)
+// axieShapeArray.push(axieShape7)
+// axieShapeArray.push(axieShape8)
+// axieShapeArray.push(axieShape9)
+// axieShapeArray.push(axieShape10)
 
 
 
@@ -224,7 +225,7 @@ for(let i=0; i<50; i++){
   //) 
 
   spawnAxie(
-    axieShapeArray[i%10], 
+    kittyShape, 
     new Vector3(randomSpawnX, 0.1, randomSpawnZ), 
     0.1, 
     Math.random() * 0.15 + 0.1
