@@ -1,4 +1,4 @@
-# Following Axies - Workshop scene
+# Axies following the player - Workshop scene
 
 ## Description
 A scene that demoes NPCs (Axies) that follow the player around and can be sent to a specific location with mouse clicks as well.
