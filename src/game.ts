@@ -72,6 +72,7 @@ function spawnAxie(modelShape:GLTFShape, _startPosition:Vector3, _defaultHeight:
     _startPosition.z = boundarySizeZMin
   }
 
+  // add default values to the axie's components
   axie.getComponent(Transform).position = _startPosition    
   axie.getComponent(FollowsPlayer).defaultHeight = _defaultHeight  
   axie.getComponent(FollowsPlayer).speed = _speed  
@@ -85,7 +86,7 @@ function spawnAxie(modelShape:GLTFShape, _startPosition:Vector3, _defaultHeight:
 //this system updates and moves the objects on every frame (the ones which have the FollowsPlayer componenet added)
 class PlayerFollowSystem {
  
-  group = engine.getComponentGroup(FollowsPlayer)
+  group = engine.getComponentGroup(FollowsPlayer,Transform)
   moveVector = new Vector3(0,0,0)
 
   update(dt: number) {
@@ -95,10 +96,12 @@ class PlayerFollowSystem {
       const objectInfo = entity.getComponent(FollowsPlayer)      
       let transform = entity.getComponentOrCreate(Transform)      
 
+      //switch between player or target point follow modes
       if(followPlayer){
         trueTarget.copyFrom(player.feetPosition) 
       }
       
+      //scattering axies randomly around target
       let scatteredTarget = new Vector3(trueTarget.x + objectInfo.randomOffsetX, objectInfo.defaultHeight, trueTarget.z + objectInfo.randomOffsetZ )
       let lookatPosition = new Vector3(trueTarget.x , 1.0, trueTarget.z )           
 
@@ -107,7 +110,7 @@ class PlayerFollowSystem {
 
         objectInfo.moving = true  
        
-        //try to move from origin to target with the speed amount stored in each axie's followPlayer component
+        //try to move in the direction of the target with the speed amount stored in each axie's followPlayer component
         this.moveVector = scatteredTarget.subtract(transform.position).normalize().multiplyByFloats(objectInfo.speed,objectInfo.speed,objectInfo.speed)
         let nextPosition = transform.position.add(this.moveVector)
 
@@ -126,11 +129,7 @@ class PlayerFollowSystem {
         objectInfo.moving = false
       }
 
-      // get the exact rotation that turns a Forward looking axie towards the target point 
-      //let targetRotation = Quaternion.FromToRotation(Vector3.Forward(), lookatPosition.subtract(origin.multiplyByFloats(1,0,1)))    
-      // gradually rotate axies towards the above target orientation     
-      //transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, dt*4)  
-
+      // turn axie towards its target
        transform.lookAt(lookatPosition)
     } 
   }
@@ -139,7 +138,6 @@ engine.addSystem(new PlayerFollowSystem())
 
 
 //idle floating movement of axies 
-//remove completely if not needed
 class bounceSystem {
 
   //jump height
@@ -177,6 +175,7 @@ engine.addSystem(new bounceSystem())
 // CREATE AXIES 
 ///////////////
 
+//load model GLBs into an array
 let axieShapeArray = []
 
 axieShapeArray.push(new GLTFShape('models/Axie_1.glb'))
@@ -233,6 +232,7 @@ for(let i = 0; i < parcelsCountX; i++){
     engine.addEntity(ground)
   }
 }
+
 // ground collider box for clicking
 let groundCollider = new Entity()
 groundCollider.addComponent(new BoxShape())
@@ -242,14 +242,14 @@ groundCollider.addComponent(new Transform({
 engine.addEntity(groundCollider)
 
 
-//axies follow the player and we hide the marker underground
+//make the axies follow the player and we hide the marker underground
 function makeFollowPlayer(){
 
   followPlayer = true
   marker.getComponent(Transform).position.set(8,-20,8)
 }
 
-//axies follow the target marker, which is moved to _loc vector input
+//make the axies follow the target marker, which is moved to _loc vector input
 function makeFollowLocation(_loc:Vector3){
   followPlayer = false
   trueTarget = _loc
@@ -274,6 +274,7 @@ input.subscribe("BUTTON_DOWN", ActionButton.POINTER, true, e => {
 input.subscribe("BUTTON_DOWN", ActionButton.PRIMARY, false, e => {     
   makeFollowPlayer()  
 })
+
 
 //UI
 const canvas = new UICanvas()
