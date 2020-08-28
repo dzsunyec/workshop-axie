@@ -3,7 +3,7 @@ const player = Camera.instance
 
 //tells whether axies follow player or the marker target
 let followPlayer = true
-let targetLocation = new Vector3(8,0,8)
+let trueTarget = new Vector3(8,0,8)
 
 //What distance around the target axies are scattered
 const scatterRadius = 6
@@ -12,7 +12,7 @@ const scatterRadius = 6
 const axieSize = 1.5
 
 //size of scene/estate (number of parcels on each axis)
-const parcelsCountX = 2
+const parcelsCountX = 3
 const parcelsCountZ = 3
 
 //boundaries in which axies can move, in meters (respecting axie's maximum size as well)
@@ -72,16 +72,12 @@ function spawnAxie(modelShape:GLTFShape, _startPosition:Vector3, _defaultHeight:
     _startPosition.z = boundarySizeZMin
   }
 
-  axie.getComponent(Transform).position = _startPosition  
-  
+  axie.getComponent(Transform).position = _startPosition    
   axie.getComponent(FollowsPlayer).defaultHeight = _defaultHeight  
   axie.getComponent(FollowsPlayer).speed = _speed  
   axie.getComponent(FollowsPlayer).elapsedTime = Math.random() * 0.5  
   axie.getComponent(FollowsPlayer).randomOffsetX =  (Math.random()*2-1) * scatterRadius
-  axie.getComponent(FollowsPlayer).randomOffsetZ = (Math.random()*2-1) * scatterRadius
-
-  //axie.addComponent(new Billboard())
-  
+  axie.getComponent(FollowsPlayer).randomOffsetZ = (Math.random()*2-1) * scatterRadius  
 
   engine.addEntity(axie)  
 }
@@ -100,29 +96,27 @@ class PlayerFollowSystem {
       let transform = entity.getComponentOrCreate(Transform)      
 
       if(followPlayer){
-        targetLocation.copyFrom(player.feetPosition) 
+        trueTarget.copyFrom(player.feetPosition) 
       }
-
-      let origin = new Vector3(transform.position.x, transform.position.y, transform.position.z)
-      let targetPosition = new Vector3(targetLocation.x + objectInfo.randomOffsetX, objectInfo.defaultHeight, targetLocation.z + objectInfo.randomOffsetZ )
-      let lookatPosition = new Vector3(targetLocation.x , 1.0, targetLocation.z )
-           
+      
+      let scatteredTarget = new Vector3(trueTarget.x + objectInfo.randomOffsetX, objectInfo.defaultHeight, trueTarget.z + objectInfo.randomOffsetZ )
+      let lookatPosition = new Vector3(trueTarget.x , 1.0, trueTarget.z )           
 
       //move axies towards target, but stop within a certain distance from their targets
-      if(distance(targetPosition, transform.position) > 0.25 ){
+      if(distance(scatteredTarget, transform.position) > 0.5 ){
 
         objectInfo.moving = true  
        
         //try to move from origin to target with the speed amount stored in each axie's followPlayer component
-        this.moveVector = targetPosition.subtract(origin).normalize().multiplyByFloats(objectInfo.speed,objectInfo.speed,objectInfo.speed)
-        let nextPosition = origin.add(this.moveVector)
+        this.moveVector = scatteredTarget.subtract(transform.position).normalize().multiplyByFloats(objectInfo.speed,objectInfo.speed,objectInfo.speed)
+        let nextPosition = transform.position.add(this.moveVector)
 
         //Out of bounds movement? if yes, then restrict coordinates to boundaries
         if( nextPosition.x > boundarySizeXMax || nextPosition.x < boundarySizeXMin){
-            nextPosition.x = origin.x
+            nextPosition.x = transform.position.x
         }
         if( nextPosition.z > boundarySizeZMax || nextPosition.z < boundarySizeZMin){
-          nextPosition.z = origin.z
+          nextPosition.z = transform.position.z
         }
 
         //move the axie to new position
@@ -183,36 +177,21 @@ engine.addSystem(new bounceSystem())
 // CREATE AXIES 
 ///////////////
 
-//Load a GLB file from project folder 'models'
-// let axieShape1 =  new GLTFShape('models/Axie_1.glb')
-// let axieShape2 =  new GLTFShape('models/Axie_2.glb')
-// let axieShape3 =  new GLTFShape('models/Axie_3.glb')
-// let axieShape4 =  new GLTFShape('models/Axie_4.glb')
-// let axieShape5 =  new GLTFShape('models/Axie_5.glb')
-// let axieShape6 =  new GLTFShape('models/Axie_6.glb')
-// let axieShape7 =  new GLTFShape('models/Axie_7.glb')
-// let axieShape8 =  new GLTFShape('models/Axie_8.glb')
-// let axieShape9 =  new GLTFShape('models/Axie_9.glb')
-// let axieShape10 =  new GLTFShape('models/Axie_10.glb')
+let axieShapeArray = []
 
-let kittyShape =  new GLTFShape('models/kitty.glb')
+axieShapeArray.push(new GLTFShape('models/Axie_1.glb'))
+axieShapeArray.push(new GLTFShape('models/Axie_2.glb'))
+axieShapeArray.push(new GLTFShape('models/Axie_3.glb'))
+axieShapeArray.push(new GLTFShape('models/Axie_4.glb'))
+axieShapeArray.push(new GLTFShape('models/Axie_5.glb'))
+axieShapeArray.push(new GLTFShape('models/Axie_6.glb'))
+axieShapeArray.push(new GLTFShape('models/Axie_7.glb'))
+axieShapeArray.push(new GLTFShape('models/Axie_8.glb'))
+axieShapeArray.push(new GLTFShape('models/Axie_9.glb'))
+axieShapeArray.push(new GLTFShape('models/Axie_10.glb'))
 
-// let axieShapeArray = []
-
-// axieShapeArray.push(axieShape1)
-// axieShapeArray.push(axieShape2)
-// axieShapeArray.push(axieShape3)
-// axieShapeArray.push(axieShape4)
-// axieShapeArray.push(axieShape5)
-// axieShapeArray.push(axieShape6)
-// axieShapeArray.push(axieShape7)
-// axieShapeArray.push(axieShape8)
-// axieShapeArray.push(axieShape9)
-// axieShapeArray.push(axieShape10)
-
-
-
-for(let i=0; i<50; i++){
+//Spawn 25 axies
+for(let i=0; i<25; i++){
   //get random coords on x and z axes
   let randomSpawnX = Math.random()*parcelsCountX*16
   let randomSpawnZ = Math.random()*parcelsCountZ*16
@@ -224,8 +203,9 @@ for(let i=0; i<50; i++){
   //movement speed 
   //) 
 
+  //Spawning different axies by chosing a different shape from the 10 shapes on each loop
   spawnAxie(
-    kittyShape, 
+    axieShapeArray[i%10], 
     new Vector3(randomSpawnX, 0.1, randomSpawnZ), 
     0.1, 
     Math.random() * 0.15 + 0.1
@@ -272,7 +252,7 @@ function makeFollowPlayer(){
 //axies follow the target marker, which is moved to _loc vector input
 function makeFollowLocation(_loc:Vector3){
   followPlayer = false
-  targetLocation = _loc
+  trueTarget = _loc
   marker.getComponent(Transform).position.copyFrom(_loc)
 
 }
@@ -295,3 +275,21 @@ input.subscribe("BUTTON_DOWN", ActionButton.PRIMARY, false, e => {
   makeFollowPlayer()  
 })
 
+//UI
+const canvas = new UICanvas()
+
+// BOTTOM EDGE UI CONTAINER
+let BottomContainer = new UIContainerRect(canvas)
+BottomContainer.height = '10%'
+BottomContainer.hAlign = 'center'
+BottomContainer.vAlign = 'bottom'
+BottomContainer.width = "30%"
+BottomContainer.color = Color4.FromHexString(`#00000088`)
+
+//INSTRUCTIONS UI TEXT
+const instructionsText = new UIText(BottomContainer)
+instructionsText.value = " - Click on ground to send Axies to target\n - Press 'E' to call axies to follow you"
+instructionsText.hTextAlign = 'center'
+instructionsText.vTextAlign = 'center'
+instructionsText.fontSize = 14
+instructionsText.color = Color4.White()
