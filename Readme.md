@@ -11,6 +11,11 @@ After you clone the project, run the following:
 ```
 npm install
 ```
+Then:
+
+```
+dcl init
+```
 
 Followed by:
 
@@ -18,5 +23,6 @@ Followed by:
 dcl start
 ```
 
-Use the Left Mouse Button on the ground to send he Axies to the clicked location
+Use the Left Mouse Button on the ground to send he Axies to the clicked location.
+
 Press 'E' to make them follow you again.
