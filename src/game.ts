@@ -1,9 +1,6 @@
 //Player's position and rotation 
 const player = Camera.instance
 
-//tells whether axies follow player or the marker target
-let followPlayer = true
-let trueTarget = new Vector3(8,0,8)
 
 //What distance around the target axies are scattered
 const scatterRadius = 6
@@ -20,6 +17,12 @@ const boundarySizeXMin = 0 + axieSize
 const boundarySizeXMax = parcelsCountX * 16 - axieSize
 const boundarySizeZMin = 0 + axieSize
 const boundarySizeZMax = parcelsCountZ * 16 - axieSize
+
+//tells whether axies follow player or the marker target
+let followPlayer = false
+let trueTarget = new Vector3(parcelsCountX*8,0, parcelsCountZ*8)
+let sceneCenterTarget = new Vector3(parcelsCountX*8,0, parcelsCountZ*8)
+
 
 // COMPONENT storing values unique to each axie
 // defaultHeight: height above ground level where axies move around
@@ -88,9 +91,24 @@ class PlayerFollowSystem {
  
   group = engine.getComponentGroup(FollowsPlayer,Transform)
   moveVector = new Vector3(0,0,0)
+  playerInsideParcel = false
 
   update(dt: number) {
 
+    // this section checks when player enters or exits the scene boundaries and make the axies follow the player on entry and reset to center on exit
+      if(player.feetPosition.x > 0 && player.feetPosition.x < parcelsCountX*16 && player.feetPosition.z > 0 && player.feetPosition.z < parcelsCountZ*16){                
+        if (!this.playerInsideParcel){
+          this.playerInsideParcel = true
+          followPlayer = true
+        }        
+      }else{
+        this.playerInsideParcel = false
+        followPlayer = false
+        trueTarget.copyFrom(sceneCenterTarget)
+        marker.getComponent(Transform).position.set(8,-20,8)
+      }
+  
+    // iterating thorugh all axies
      for (let entity of this.group.entities) {
 
       const objectInfo = entity.getComponent(FollowsPlayer)      
@@ -170,6 +188,23 @@ class bounceSystem {
 }
 
 engine.addSystem(new bounceSystem())
+
+
+//SIGNS
+
+let axieSignShape = new GLTFShape('models/axieSign.glb')
+let axieSign = new Entity()
+axieSign.addComponent(axieSignShape)
+axieSign.addComponent(new Transform({
+  position: new Vector3(parcelsCountX*8,-0.9,parcelsCountZ*8),
+  scale: new Vector3(1.5,1.5,1.5)}))
+engine.addEntity(axieSign)
+
+// let dapperSignShape = new GLTFShape('models/DAPP3.glb')
+// let dapperSign = new Entity()
+// dapperSign.addComponent(dapperSignShape)
+// dapperSign.addComponent(new Transform({position: new Vector3(parcelsCountX*8,-0.9,parcelsCountZ*8),}))
+// engine.addEntity(dapperSign)
 
 ///////////////
 // CREATE AXIES 
